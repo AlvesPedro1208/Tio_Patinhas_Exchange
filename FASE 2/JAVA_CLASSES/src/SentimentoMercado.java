@@ -1,3 +1,0 @@
-// MATHEUS
-public class SentimentoMercado {
-}
