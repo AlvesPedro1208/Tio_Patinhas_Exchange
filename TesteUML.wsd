@@ -1,0 +1,122 @@
+@startuml
+
+class Usuario {
+    - int id
+    - String nome
+    - String email
+    - String senha
+    - LocalDateTime dataCriacao
+    - List<CriptoAtivo> moedas
+    - List<Transacao> transacoes
+    --
+    + autenticar(String email, String senha)
+    + visualizarDashboard()
+    + gerarRelatorio()
+    + simularInvestimento()
+}
+
+class CriptoAtivo {
+    - int id
+    - String nome
+    - String sigla
+    - double precoAtual
+    - double marketCap
+    - double volumeTransacoes
+    - int anoCriacao
+    --
+    + atualizarPreco()
+    + calcularVariacao()
+}
+
+class Transacao {
+    - int id
+    - Usuario usuario
+    - CriptoAtivo cripto
+    - String tipo
+    - double quantidade
+    - double valorUnitario
+    - LocalDateTime data
+    --
+    + calcularValorTotal()
+    + registrarTransacao()
+}
+
+class Carteira {
+    - int id
+    - Usuario usuario
+    - Map<CriptoAtivo, Double> ativos
+    - double valorTotal
+    --
+    + calcularValorTotal()
+    + atualizarSaldo()
+    + gerarGraficoValorizacao()
+}
+
+class RelatorioFinanceiro {
+    - int id
+    - Usuario usuario
+    - LocalDateTime dataGeracao
+    - double rentabilidade
+    - double investimentoTotal
+    - Map<CriptoAtivo, Map<String, Double>> ativosDetalhados
+    --
+    + gerarRelatorio()
+    + exportarPDF()
+    + calcularRentabilidade()
+}
+
+class Alerta {
+    - int id
+    - Usuario usuario
+    - CriptoAtivo cripto
+    - String condicao
+    - String mensagem
+    - boolean ativo
+    --
+    + verificarCondicao()
+    + enviarNotificacao()
+}
+
+class AnalisePreditiva {
+    - int id
+    - CriptoAtivo cripto
+    - String modelo
+    - double previsao
+    - LocalDateTime dataPrevisao
+    --
+    + realizarPrevisao()
+    + treinarModelo()
+}
+
+class SentimentoMercado {
+    - int id
+    - CriptoAtivo cripto
+    - double indiceSentimento
+    - String fonte
+    - LocalDateTime data
+    --
+    + coletarDados()
+    + calcularSentimento()
+}
+
+class Autenticacao {
+    - Usuario usuario
+    - String token
+    - LocalDateTime expiracao
+    --
+    + login()
+    + logout()
+    + validarToken()
+}
+
+Usuario --> Carteira
+Usuario --> Transacao
+Usuario --> RelatorioFinanceiro
+Usuario --> Alerta
+Carteira --> CriptoAtivo
+Transacao --> CriptoAtivo
+CriptoAtivo --> AnalisePreditiva
+CriptoAtivo --> SentimentoMercado
+Autenticacao --> Usuario
+
+@enduml
