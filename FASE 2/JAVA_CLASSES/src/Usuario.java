@@ -1,0 +1,3 @@
+// GI
+public class Usuario {
+}
