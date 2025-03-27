@@ -60,9 +60,10 @@ class RelatorioFinanceiro {
     - double investimentoTotal
     - Map<CriptoAtivo, Map<String, Double>> ativosDetalhados
     --
-    + gerarRelatorio()
+    + gerarRelatorioFinanceiro(Carteira carteira, Map<CriptoAtivo, Double> precoCompra)
+    + calcularRentabilidade(double valorAtualTotal)
+    + imprimirRelatorio()
     + exportarPDF()
-    + calcularRentabilidade()
 }
 
 class Alerta {
