@@ -1,0 +1,114 @@
+@startuml
+' Classes do Programa
+entity Usuario {
+  *id: int <<PK>>
+  nome: string
+  email: string
+  senha: string
+  dataCriacao: datetime
+  criador_crypto: boolean
+  crypto_criada: string
+}
+
+entity Carteira {
+  *id: int <<PK>>
+  id_usuario: int <<FK>>
+  valor_total: decimal
+}
+
+entity Autenticacao {
+  *token: string <<PK>>
+  usuario_id: int <<FK>>
+  expiracao: datetime
+}
+
+entity Alerta {
+  *id: int <<PK>>
+  usuario_id: int <<FK>>
+  cripto_id: int <<FK>>
+  condicao: string
+  mensagem: string
+  ativo: boolean
+}
+
+entity CriptoAtivo {
+  *id: int <<PK>>
+  nome: string
+  sigla: string
+  preco_atual: decimal
+  market_cap: decimal
+  volume_transacoes: decimal
+  ano_criacao: datetime
+}
+
+entity RelatorioFinanceiro {
+  *id: int <<PK>>
+  usuario_id: int <<FK>>
+  data_geracao: datetime
+  rentabilidade: decimal
+  investimento_total: decimal
+}
+
+entity Transacao {
+  *id: int <<PK>>
+  usuario_id: int <<FK>>
+  cripto_id: int <<FK>>
+  tipo: string
+  quantidade: decimal
+  valor_unitario: decimal
+  data: datetime
+}
+
+' Entidades de Relacionamento
+entity Carteira_CriptoAtivo {
+    *id_carteira_crypto: int <<PK>>
+  *carteira_id: int <<FK>>
+  *cripto_id: int <<FK>>
+  saldo: decimal
+}
+
+entity Relatorio_Ativo {
+    *id_relatorio_ativo: int <<PK>>
+  *relatorio_id: int <<FK>>
+  *cripto_id: int <<FK>>
+  preco_compra: decimal
+  quantidade: decimal
+}
+
+' entity AnalisePreditiva {
+'   *id: int <<PK>>
+'   cripto_id: int <<FK>>
+'   modelo: string
+'   previsao: decimal
+'   data_previsao: datetime
+' }
+
+' entity SentimentoMercado {
+'   *id: int <<PK>>
+'   cripto_id: int <<FK>>
+'   indice_sentimento: decimal
+'   fonte: string
+'   data: datetime
+' }
+
+' RELACIONAMENTOS
+Usuario ||--o{ Carteira : possui
+Usuario ||--|| Autenticacao : possui
+
+Carteira ||--o{ Carteira_CriptoAtivo : registra
+CriptoAtivo ||--o{ Carteira_CriptoAtivo : compõe
+
+Usuario ||--o{ Transacao : realiza
+Transacao }o--|| CriptoAtivo : refere-se
+
+Usuario ||--o{ RelatorioFinanceiro : gera
+RelatorioFinanceiro ||--o{ Relatorio_Ativo : detalha
+CriptoAtivo ||--o{ Relatorio_Ativo : participa
+
+Usuario ||--o{ Alerta : define
+Alerta }o--|| CriptoAtivo : monitora
+
+' AnalisePreditiva }o--|| CriptoAtivo : prevê
+' SentimentoMercado }o--|| CriptoAtivo : analisa
+@enduml
+
