@@ -20,7 +20,7 @@ public class RelatorioFinanceiro {
         this.investimentoTotal = 0;
         double valorAtualTotal = 0;
 
-        for (Map.Entry<CriptoAtivo, Double> entry : carteira.ativos.entrySet()) {
+        for (Map.Entry<CriptoAtivo, Double> entry : carteira.getAtivos().entrySet()) {
             CriptoAtivo ativo = entry.getKey();
             double quantidade = entry.getValue();
             double precoAtual = ativo.getPrecoAtual();

@@ -78,6 +78,27 @@ class Alerta {
     + enviarNotificacao()
 }
 
+class AlertaPreco {
+    - double precoAlvo
+    --
+    + verificarPreco()
+    + enviarNotificacao()
+}
+
+class AlertaSeguranca {
+    - Carteira carteira
+    --
+    + verificarSeguranca()
+    + enviarNotificacao()
+}
+
+class AlertaVolatilidade {
+    - double percentualVariacao
+    --
+    + verificarVolatilidade(double precoAnterior)
+    + enviarNotificacao()
+}
+
 class AnalisePreditiva {
     - int id
     - CriptoAtivo cripto
@@ -110,6 +131,11 @@ class Autenticacao {
     + validarToken()
 }
 
+class Main {
+    --
+    + main(String[] args)
+}
+
 Usuario --> Carteira
 Usuario --> Transacao
 Usuario --> RelatorioFinanceiro
@@ -119,5 +145,17 @@ Transacao --> CriptoAtivo
 CriptoAtivo --> AnalisePreditiva
 CriptoAtivo --> SentimentoMercado
 Autenticacao --> Usuario
+
+Alerta <|-- AlertaPreco
+Alerta <|-- AlertaSeguranca
+Alerta <|-- AlertaVolatilidade
+
+Main ..> Usuario : Cria instâncias e popula objetos
+Main ..> CriptoAtivo
+Main ..> Carteira
+Main ..> Transacao
+Main ..> AlertaPreco
+Main ..> AlertaSeguranca
+Main ..> AlertaVolatilidade
 
 @enduml
