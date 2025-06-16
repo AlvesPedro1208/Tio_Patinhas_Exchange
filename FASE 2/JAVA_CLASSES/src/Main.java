@@ -1,72 +1,119 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
+
     public static void main(String[] args) {
-        try {
-            System.out.println("--- 1. Criando o mercado de Criptoativos com HashMa p ---");
-            HashMap<String, CriptoAtivo> mercadoCripto = new HashMap<>();
-            mercadoCripto.put("BTC", new CriptoAtivo(1, "Bitcoin", "BTC", 50000.0, 900_000_000, 80_000_000, 2009));
-            mercadoCripto.put("ETH", new CriptoAtivo(2, "Ethereum", "ETH", 3000.0, 400_000_000, 50_000_000, 2015));
-            mercadoCripto.put("ADA", new CriptoAtivo(3, "Cardano", "ADA", 2.5, 150_000_000, 45_000_000, 2017));
 
-            for (String sigla : mercadoCripto.keySet()) {
-                System.out.println("-> Ativo disponível: " + mercadoCripto.get(sigla).getNome() + " (" + sigla + ")");
+        System.out.println("\n--- 1. Carregando dados a partir de arquivos CSV ---");
+        HashMap<String, CriptoAtivo> mercadoCripto = carregarCriptoativosDeCSV("criptoativos.csv");
+        ArrayList<Usuario> usuarios = carregarUsuariosDeCSV("usuarios.csv");
+
+        if (mercadoCripto.isEmpty() || usuarios.isEmpty()) {
+            System.err.println("Falha ao carregar dados. Encerrando a simulação.");
+            return;
+        }
+
+        System.out.println(mercadoCripto.size() + " criptoativos carregados.");
+        System.out.println(usuarios.size() + " usuários carregados.");
+
+        System.out.println("\n--- 2. Simulando operações para cada usuário ---");
+        HashMap<Integer, Carteira> carteirasPorUsuario = new HashMap<>();
+
+        for (Usuario usuarioAtual : usuarios) {
+            System.out.println("\n>>> Processando para o usuário: " + usuarioAtual.getNome() + " <<<");
+
+            CriptoAtivo bitcoin = mercadoCripto.get("BTC");
+            CriptoAtivo ethereum = mercadoCripto.get("ETH");
+
+            if (bitcoin == null || ethereum == null) {
+                System.err.println("BTC ou ETH não encontrados no mercado. Pulando usuário.");
+                continue;
             }
 
-            ArrayList<Usuario> usuarios = new ArrayList<>();
-            usuarios.add(new Usuario(101, "Matheus", "matheus@email.com", "senha123", LocalDateTime.now(), new ArrayList<>(), new ArrayList<>()));
-            usuarios.add(new Usuario(102, "Pedro", "pedro@email.com", "senha456", LocalDateTime.now(), new ArrayList<>(), new ArrayList<>()));
-            usuarios.add(new Usuario(103, "Giovanna", "giovanna@email.com", "senha789", LocalDateTime.now(), new ArrayList<>(), new ArrayList<>()));
-            usuarios.add(new Usuario(104, "Lucas", "lucas@email.com", "senha101", LocalDateTime.now(), new ArrayList<>(), new ArrayList<>()));
-            usuarios.add(new Usuario(105, "Leandro", "leandro@email.com", "senha112", LocalDateTime.now(), new ArrayList<>(), new ArrayList<>()));
+            Carteira carteira = new Carteira(usuarioAtual.getId(), usuarioAtual, new HashMap<>(), 0.0);
+            carteirasPorUsuario.put(usuarioAtual.getId(), carteira);
 
-            System.out.println("\n--- 2. Preparando o sistema de carteiras com HashMap ---");
-            HashMap<Integer, Carteira> carteirasPorUsuario = new HashMap<>();
+            carteira.getAtivos().put(bitcoin, 2.0);
+            carteira.getAtivos().put(ethereum, 5.0);
+            carteira.atualizarSaldo();
+            System.out.println("Carteira criada e armazenada. Valor total: R$" + String.format("%.2f", carteira.getValorTotal()));
+        }
 
-            System.out.println("\n--- 3. Simulando operações para cada usuário ---");
+        System.out.println("\n--- 3. Salvando relatório de carteiras em arquivo de texto ---");
+        salvarRelatorioCarteiras(carteirasPorUsuario);
 
-            for (Usuario usuarioAtual : usuarios) {
-                System.out.println("\n>>> Processando para o usuário: " + usuarioAtual.getNome() + " <<<");
+        System.out.println("\n--- Simulação concluída com sucesso! ---");
+    }
 
-                CriptoAtivo bitcoin = mercadoCripto.get("BTC");
-                CriptoAtivo ethereum = mercadoCripto.get("ETH");
+    public static HashMap<String, CriptoAtivo> carregarCriptoativosDeCSV(String nomeArquivo) {
+        HashMap<String, CriptoAtivo> mercado = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(nomeArquivo))) {
+            String linha = br.readLine();
+            while ((linha = br.readLine()) != null) {
+                String[] dados = linha.split(",");
+                int id = Integer.parseInt(dados[0]);
+                String nome = dados[1];
+                String sigla = dados[2];
+                double preco = Double.parseDouble(dados[3]);
+                double marketCap = Double.parseDouble(dados[4]);
+                double volume = Double.parseDouble(dados[5]);
+                int ano = Integer.parseInt(dados[6]);
 
-                Carteira carteira = new Carteira(usuarioAtual.getId(), usuarioAtual, new HashMap<>(), 0.0);
-                carteirasPorUsuario.put(usuarioAtual.getId(), carteira);
-
-                carteira.getAtivos().put(bitcoin, 2.0);
-                carteira.getAtivos().put(ethereum, 5.0);
-                carteira.atualizarSaldo();
-                System.out.println("Carteira criada e armazenada. Valor total: R$" + String.format("%.2f", carteira.getValorTotal()));
-
-                Transacao transacao1 = new Transacao(1, usuarioAtual, bitcoin, "Compra", 1.0, 50000.0, LocalDateTime.now());
-                Transacao transacao2 = new Transacao(2, usuarioAtual, ethereum, "Compra", 3.0, 3000.0, LocalDateTime.now());
-                usuarioAtual.getTransacoes().add(transacao1);
-                usuarioAtual.getTransacoes().add(transacao2);
+                CriptoAtivo ativo = new CriptoAtivo(id, nome, sigla, preco, marketCap, volume, ano);
+                mercado.put(sigla, ativo);
             }
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Erro ao carregar criptoativos do arquivo " + nomeArquivo + ": " + e.getMessage());
+        }
+        return mercado;
+    }
 
-            System.out.println("\n--- 4. Acessando dados com HashMap ---");
+    public static ArrayList<Usuario> carregarUsuariosDeCSV(String nomeArquivo) {
+        ArrayList<Usuario> usuarios = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(nomeArquivo))) {
+            String linha = br.readLine();
+            while ((linha = br.readLine()) != null) {
+                String[] dados = linha.split(",");
+                int id = Integer.parseInt(dados[0]);
+                String nome = dados[1];
+                String email = dados[2];
+                String senha = dados[3];
+                LocalDateTime dataCriacao = LocalDateTime.parse(dados[4]);
 
-            System.out.println("Buscando informações do Ethereum (ETH) diretamente do mercado...");
-            CriptoAtivo ethInfo = mercadoCripto.get("ETH");
-            if (ethInfo != null) {
-                System.out.println("Nome: " + ethInfo.getNome() + ", Preço Atual: R$" + ethInfo.getPrecoAtual());
+                Usuario usuario = new Usuario(id, nome, email, senha, dataCriacao, new ArrayList<>(), new ArrayList<>());
+                usuarios.add(usuario);
             }
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Erro ao carregar usuários do arquivo " + nomeArquivo + ": " + e.getMessage());
+        }
+        return usuarios;
+    }
 
-            int idUsuarioBusca = 101;
-            System.out.println("\nBuscando a carteira do usuário com ID " + idUsuarioBusca + "...");
-            Carteira carteiraGiovanna = carteirasPorUsuario.get(idUsuarioBusca);
-            if (carteiraGiovanna != null) {
-                System.out.println("Carteira encontrada! Valor total: R$" + String.format("%.2f", carteiraGiovanna.getValorTotal()));
+    public static void salvarRelatorioCarteiras(HashMap<Integer, Carteira> carteiras) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("relatorio_carteiras.txt"))) {
+            writer.println("### RELATÓRIO DE CARTEIRAS DE CLIENTES ###");
+            for (Carteira c : carteiras.values()) {
+                writer.println("\n=============================================");
+                writer.printf(">> CARTEIRA DO USUÁRIO: %s (ID: %d)\n", c.getUsuario().getNome(), c.getUsuario().getId());
+                writer.println("---------------------------------------------");
+                for (Map.Entry<CriptoAtivo, Double> ativoEntry : c.getAtivos().entrySet()) {
+                    writer.printf("  - Ativo: %s (%s) | Quantidade: %.2f\n",
+                            ativoEntry.getKey().getNome(), ativoEntry.getKey().getSigla(), ativoEntry.getValue());
+                }
+                writer.printf("VALOR TOTAL DA CARTEIRA: R$ %.2f\n", c.getValorTotal());
             }
-
-            System.out.println("\n--- Simulação concluída com sucesso! ---");
-
-        } catch (Exception e) {
-            System.out.println("Erro ao executar a simulação: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("Arquivo 'relatorio_carteiras.txt' salvo com sucesso!");
+        } catch (IOException e) {
+            System.err.println("Erro ao escrever o relatório de carteiras: " + e.getMessage());
         }
     }
+
 }
